@@ -60,6 +60,10 @@ Patient has capability to revoke access of Clinic from individual document at an
 Download of Document is very much restricted, Only Users who are given access by patient, can only
 access the document. 
 
+
 Documentation for API - 
 
 https://documenter.getpostman.com/view/1792904/TVRhbUCT
+
+Heorku Link: https://clinic-management-ectosense.herokuapp.com/
+
