@@ -66,15 +66,16 @@ public class FileInfo
     @Column(name = "file_url")
     String fileUrl;
 
-    public boolean doesClinicHasAccess(Set<Clinic> targetSet)
-    {
-        for (Clinic clinic : targetSet)
-        {
-            if (this.clinics.contains(clinic))
-            {
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public boolean equals(Object obj) {
+        if ((null == obj) || (obj.getClass() != FileInfo.class))
+            return false;
+        FileInfo fileInfo = (FileInfo)obj;
+        return id.equals(fileInfo.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }

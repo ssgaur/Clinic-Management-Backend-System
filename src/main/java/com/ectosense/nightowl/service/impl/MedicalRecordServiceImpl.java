@@ -17,7 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBui
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,9 +75,14 @@ public class MedicalRecordServiceImpl
                     file.getOriginalFilename())
                     .build().toString();
             FileInfo fileInfo = new FileInfo();
+            fileInfo.setPatient(patient);
             fileInfo.setFileName(file.getOriginalFilename());
             fileInfo.setFileUrl(url);
             return fileInfoService.saveFile(fileInfo);
+        }
+        catch (FileAlreadyExistsException e)
+        {
+            throw new RuntimeException("File with same name already exists");
         }
         catch (Exception e)
         {
@@ -140,32 +145,8 @@ public class MedicalRecordServiceImpl
         return fileInfoService.getFilesByPatient(patient);
     }
 
-    public Resource getDocument(UUID documentId, User user) {
-        FileInfo fileInfo = fileInfoService.getDocumentById(documentId);
-        if (fileInfo == null)
-        {
-            throw new ResourceNotFoundException("No Document found.");
-        }
-        Set<Clinic> clinics = new HashSet<>();
-        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_CLINIC.getValue()))
-        {
-            Clinic clinic = clinicService.getClinicByUser(user);
-            if (clinic != null)
-            {
-                clinics.add(clinic);
-            }
-        }
-
-        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_DOCTOR.getValue()))
-        {
-            Doctor doctor = doctorService.getDoctorByUser(user);
-            clinics.addAll(doctor.getClinicList());
-        }
-        if (!fileInfo.doesClinicHasAccess(clinics))
-        {
-            throw new IllegalArgumentException("This document is not shared with your clinic.");
-        }
-
+    private Resource downloadResource(FileInfo fileInfo)
+    {
         try
         {
             UUID patientId = fileInfo.getPatient().getId();
@@ -185,5 +166,57 @@ public class MedicalRecordServiceImpl
         {
             throw new RuntimeException("Error: " + e.getMessage());
         }
+    }
+
+    public Resource getDocument(UUID documentId, User user) {
+        FileInfo fileInfo = fileInfoService.getDocumentById(documentId);
+        if (fileInfo == null)
+        {
+            throw new ResourceNotFoundException("No Document found.");
+        }
+        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_PATIENT.getValue()))
+        {
+            Patient patient = patientService.getPatientByUser(user);
+            if (patient != null && patient.getId().equals(fileInfo.getId()))
+            {
+                return downloadResource(fileInfo);
+            } else
+            {
+                throw new IllegalArgumentException("Access Denied");
+            }
+        }
+
+        Set<Clinic> clinics = new HashSet<>();
+        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_CLINIC.getValue()))
+        {
+            Clinic clinic = clinicService.getClinicByUser(user);
+            if (clinic != null)
+            {
+                clinics.add(clinic);
+            }
+        }
+
+        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_DOCTOR))
+        {
+            Doctor doctor = doctorService.getDoctorByUser(user);
+            clinics.addAll(doctor.getClinicList());
+        }
+        if (!doesClinicHasAccess(clinics, fileInfo))
+        {
+            throw new IllegalArgumentException("This document is not shared with your clinic.");
+        }
+        return downloadResource(fileInfo);
+    }
+
+    private boolean doesClinicHasAccess(Set<Clinic> targetSet, FileInfo fileInfo)
+    {
+        for (Clinic clinic : targetSet)
+        {
+            if (fileInfo.getClinics().contains(clinic))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

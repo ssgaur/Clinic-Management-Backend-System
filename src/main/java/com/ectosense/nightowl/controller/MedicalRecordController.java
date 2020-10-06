@@ -75,7 +75,7 @@ public class MedicalRecordController extends ApiController
         }
     }
 
-    @RequestMapping(value = "{patientId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{patientId}", method = RequestMethod.GET)
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
             "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
     public ResponseEntity getDocumentsByPatient(@PathVariable UUID patientId)
@@ -84,7 +84,7 @@ public class MedicalRecordController extends ApiController
         return new ResponseEntity<>(files, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "{clinicId}/patient/{patientId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/clinic/{clinicId}/patient/{patientId}", method = RequestMethod.GET)
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
             "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
     public ResponseEntity getDocumentsByPatientAndClinic(@PathVariable UUID clinicId, @PathVariable UUID patientId)
@@ -94,7 +94,7 @@ public class MedicalRecordController extends ApiController
         return new ResponseEntity<>(files, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/{documentId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{documentId}/download", method = RequestMethod.GET)
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
             "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
     public ResponseEntity getDocument(@PathVariable UUID documentId, Principal principal)
