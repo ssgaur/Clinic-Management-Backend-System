@@ -1,0 +1,45 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.ectosense'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.1.4.RELEASE'
+	implementation 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+	runtimeOnly 'org.springframework.boot:spring-boot-devtools:2.1.4.RELEASE'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	implementation 'org.postgresql:postgresql:42.2.2'
+	implementation 'org.liquibase:liquibase-core:3.6.2'
+	implementation 'io.springfox:springfox-swagger2:2.9.2'
+	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+
+	implementation 'org.testng:testng:6.14.3'
+	implementation 'org.apache.commons:commons-lang3:3.8.1'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security:2.1.4.RELEASE'
+	implementation 'org.springframework.security.oauth:spring-security-oauth2:2.1.4.RELEASE'
+	implementation 'io.jsonwebtoken:jjwt-api:0.10.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.10.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.10.5'
+
+}

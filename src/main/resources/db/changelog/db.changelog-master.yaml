@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/scripts/0001_create_users_table.sql
+  - include:
+      file: db/changelog/scripts/0002_create_clinic_and_doctor_table.sql
+  - include:
+      file: db/changelog/scripts/0003_seed_test_data.sql
