@@ -1,8 +1,10 @@
 package com.ectosense.nightowl.data.entity;
 
 import com.ectosense.nightowl.data.model.UserMeta;
+import com.ectosense.nightowl.utils.CustomPasswordSerializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -61,6 +63,7 @@ public class User
 
     @NotNull(message = "Password is mandatory.")
     @Column(name = "password")
+    @JsonSerialize(using = CustomPasswordSerializer.class)
     private String password;
 
     @Column(name = "user_meta")
