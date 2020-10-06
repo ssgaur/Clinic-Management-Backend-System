@@ -54,6 +54,11 @@ public class ClinicServiceImpl
         return clinicRepository.getOne(clinicId);
     }
 
+    public Clinic getClinicByUser(User user)
+    {
+        return clinicRepository.findByAccountDetails(user);
+    }
+
     public Clinic saveClinic(Clinic clinic)
     {
         return clinicRepository.save(clinic);

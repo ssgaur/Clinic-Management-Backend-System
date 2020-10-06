@@ -65,4 +65,16 @@ public class FileInfo
 
     @Column(name = "file_url")
     String fileUrl;
+
+    public boolean doesClinicHasAccess(Set<Clinic> targetSet)
+    {
+        for (Clinic clinic : targetSet)
+        {
+            if (this.clinics.contains(clinic))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

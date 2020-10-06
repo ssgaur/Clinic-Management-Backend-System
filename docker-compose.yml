@@ -1,8 +1,8 @@
-version: "0.1"
+version: "2.1"
 
 services:
   nightowl:
-    image: "nightowl"
+    build: ./
     mem_limit: 1028m
     ports:
       - "44444:8080"

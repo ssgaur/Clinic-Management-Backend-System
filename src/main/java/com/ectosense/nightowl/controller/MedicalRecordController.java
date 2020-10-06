@@ -1,8 +1,6 @@
 package com.ectosense.nightowl.controller;
 
 
-import com.ectosense.nightowl.data.model.FileInfo;
-import com.ectosense.nightowl.service.impl.FilesStorageServiceImpl;
 import com.ectosense.nightowl.service.impl.MedicalRecordServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +16,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * {@code MedicalRecordController} is the  Controller to handle all Medical Document related End points.
@@ -98,12 +94,12 @@ public class MedicalRecordController extends ApiController
         return new ResponseEntity<>(files, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "{patientId}/files/{filename:.+}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{documentId}", method = RequestMethod.GET)
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
             "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
-    public ResponseEntity getDocument(@PathVariable UUID patientId, @PathVariable String filename)
+    public ResponseEntity getDocument(@PathVariable UUID documentId, Principal principal)
     {
-        Resource file = medicalRecordService.getDocument(patientId, filename);
+        Resource file = medicalRecordService.getDocument(documentId, getUser(principal));
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }

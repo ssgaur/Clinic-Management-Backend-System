@@ -2,9 +2,11 @@ package com.ectosense.nightowl.service.impl;
 
 import com.ectosense.nightowl.controller.MedicalRecordController;
 import com.ectosense.nightowl.data.entity.Clinic;
+import com.ectosense.nightowl.data.entity.Doctor;
 import com.ectosense.nightowl.data.entity.FileInfo;
 import com.ectosense.nightowl.data.entity.Patient;
 import com.ectosense.nightowl.data.entity.User;
+import com.ectosense.nightowl.data.enums.UserRole;
 import com.ectosense.nightowl.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -15,11 +17,14 @@ import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBui
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -30,6 +35,9 @@ public class MedicalRecordServiceImpl
 
     @Autowired
     private ClinicServiceImpl clinicService;
+
+    @Autowired
+    private DoctorServiceImpl doctorService;
 
     @Autowired
     private FileInfoServiceImpl fileInfoService;
@@ -77,6 +85,21 @@ public class MedicalRecordServiceImpl
         }
     }
 
+    public FileInfo saveDocumentForClinic(UUID clinicId, MultipartFile file, User user)
+    {
+        Clinic clinic = clinicService.getClinicById(clinicId);
+        if (clinic == null)
+        {
+            throw  new ResourceNotFoundException("Clinic Not found");
+        }
+        FileInfo fileInfo = saveDocument(user, file);
+        if (!fileInfo.getClinics().contains(clinic))
+        {
+            fileInfo.getClinics().add(clinic);
+        }
+        return fileInfoService.saveFile(fileInfo);
+    }
+
     public FileInfo removeClinicFromDocument(UUID documentId, UUID clinicId)
     {
         FileInfo fileInfo = fileInfoService.getDocumentById(documentId);
@@ -92,21 +115,6 @@ public class MedicalRecordServiceImpl
         if (fileInfo.getClinics().contains(clinic))
         {
             fileInfo.getClinics().remove(clinic);
-        }
-        return fileInfoService.saveFile(fileInfo);
-    }
-
-    public FileInfo saveDocumentForClinic(UUID clinicId, MultipartFile file, User user)
-    {
-        Clinic clinic = clinicService.getClinicById(clinicId);
-        if (clinic == null)
-        {
-            throw  new ResourceNotFoundException("Clinic Not found");
-        }
-        FileInfo fileInfo = saveDocument(user, file);
-        if (!fileInfo.getClinics().contains(clinic))
-        {
-            fileInfo.getClinics().add(clinic);
         }
         return fileInfoService.saveFile(fileInfo);
     }
@@ -132,11 +140,37 @@ public class MedicalRecordServiceImpl
         return fileInfoService.getFilesByPatient(patient);
     }
 
-    public Resource getDocument(UUID patientId, String filename) {
+    public Resource getDocument(UUID documentId, User user) {
+        FileInfo fileInfo = fileInfoService.getDocumentById(documentId);
+        if (fileInfo == null)
+        {
+            throw new ResourceNotFoundException("No Document found.");
+        }
+        Set<Clinic> clinics = new HashSet<>();
+        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_CLINIC.getValue()))
+        {
+            Clinic clinic = clinicService.getClinicByUser(user);
+            if (clinic != null)
+            {
+                clinics.add(clinic);
+            }
+        }
+
+        if (user.getUserMeta().getUserRoles().contains(UserRole.ROLE_DOCTOR.getValue()))
+        {
+            Doctor doctor = doctorService.getDoctorByUser(user);
+            clinics.addAll(doctor.getClinicList());
+        }
+        if (!fileInfo.doesClinicHasAccess(clinics))
+        {
+            throw new IllegalArgumentException("This document is not shared with your clinic.");
+        }
+
         try
         {
+            UUID patientId = fileInfo.getPatient().getId();
             Path root  = Paths.get("uploads/"+patientId);
-            Path file = root.resolve(filename);
+            Path file = root.resolve(fileInfo.getFileName());
             Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() || resource.isReadable())

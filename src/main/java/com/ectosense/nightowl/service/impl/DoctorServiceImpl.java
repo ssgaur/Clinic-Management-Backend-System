@@ -38,6 +38,11 @@ public class DoctorServiceImpl
         return doctorRepository.getOne(doctorId);
     }
 
+    public Doctor getDoctorByUser(User user)
+    {
+        return doctorRepository.findByAccountDetails(user);
+    }
+
     public Doctor saveDoctor(Doctor doctor)
     {
         return doctorRepository.save(doctor);
