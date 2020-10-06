@@ -77,12 +77,21 @@ CREATE TABLE tbl_appointment(
 
 CREATE TABLE tbl_document(
      id               UUID          PRIMARY KEY DEFAULT uuid_generate_v4(),
-     appointment_id   UUID          NOT NULL,
+     patient_id       UUID          NOT NULL,
      file_name        TEXT          NOT NULL,
      file_url         TEXT          NOT NULL,
-     CONSTRAINT document_appointment_fk     FOREIGN KEY (appointment_id)      REFERENCES tbl_appointment  (id)
+     CONSTRAINT document_patient_fk         FOREIGN KEY (patient_id)          REFERENCES tbl_patient     (id)
 );
 
+CREATE TABLE tbl_document_clinic_mapping(
+    clinic_id       UUID    NOT NULL,
+    document_id     UUID    NOT NULL,
+    PRIMARY KEY (clinic_id, document_id),
+    CONSTRAINT document_clinic_mapping_clinic   FOREIGN KEY (clinic_id)   REFERENCES tbl_clinic     (id),
+    CONSTRAINT document_clinic_mapping_document FOREIGN KEY (document_id) REFERENCES tbl_document   (id)
+);
+
+--rollback DROP TABLE tbl_document_clinic_mapping;
 --rollback DROP TABLE tbl_document;
 --rollback DROP TABLE tbl_appointment;
 --rollback DROP TABLE tbl_patient;

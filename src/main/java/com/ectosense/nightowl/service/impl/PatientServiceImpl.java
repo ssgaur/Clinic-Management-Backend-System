@@ -32,6 +32,11 @@ public class PatientServiceImpl
     {
         return patientRepository.getOne(patientId);
     }
+
+    public Patient getPatientByUser(User user)
+    {
+        return patientRepository.findAllByAccountDetails(user);
+    }
     public List<Patient> getAllPatient()
     {
         return patientRepository.findAll();

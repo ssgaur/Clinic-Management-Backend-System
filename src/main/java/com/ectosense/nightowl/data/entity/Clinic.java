@@ -5,6 +5,7 @@ import com.ectosense.nightowl.utils.CustomAssistantListSerializer;
 import com.ectosense.nightowl.utils.CustomDoctorListDeSerializer;
 import com.ectosense.nightowl.utils.CustomDoctorListSerializer;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -71,6 +72,10 @@ public class Clinic
     @JsonSerialize(using = CustomAssistantListSerializer.class)
     @JsonDeserialize(using = CustomAssistantListDeSerializer.class)
     Set<Assistant> assistantList = new HashSet<>();
+
+    @OneToMany(mappedBy="clinics")
+    @JsonIgnore
+    private Set<FileInfo> documents = new HashSet<>();
 
     @ApiModelProperty(hidden = true)
     @Column(name = "created_at")

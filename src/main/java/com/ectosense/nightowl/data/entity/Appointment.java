@@ -63,9 +63,6 @@ public class Appointment
     @Column(name = "end_time")
     private Date endTime ;
 
-    @OneToMany(mappedBy="appointment")
-    private Set<FileInfo> documents = new HashSet<>();
-
     @ApiModelProperty(hidden = true)
     @Column(name = "created_at")
     private Date createdAt;

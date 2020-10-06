@@ -3,12 +3,14 @@ package com.ectosense.nightowl.controller;
 
 import com.ectosense.nightowl.data.model.FileInfo;
 import com.ectosense.nightowl.service.impl.FilesStorageServiceImpl;
+import com.ectosense.nightowl.service.impl.MedicalRecordServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -29,11 +33,82 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/documents")
-public class MedicalRecordController
+public class MedicalRecordController extends ApiController
 {
     @Autowired
-    private FilesStorageServiceImpl fileStorageService;
+    private MedicalRecordServiceImpl medicalRecordService;
 
+
+    @PreAuthorize("hasRole('ROLE_PATIENT')")
+    @RequestMapping(value = "/upload", method = RequestMethod.POST)
+    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, Principal principal)
+    {
+        try {
+            com.ectosense.nightowl.data.entity.FileInfo fileInfo =
+                    medicalRecordService.saveDocument(getUser(principal), file);
+            return new ResponseEntity<>(fileInfo, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Could not Upload.", HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_PATIENT')")
+    @RequestMapping(value = "/{clinicId}/upload", method = RequestMethod.POST)
+    public ResponseEntity uploadFileForClinic(@PathVariable UUID clinicId,
+                                              @RequestParam("file") MultipartFile file, Principal principal)
+    {
+        try {
+            com.ectosense.nightowl.data.entity.FileInfo fileInfo = medicalRecordService.saveDocumentForClinic(clinicId,
+                    file, getUser(principal));
+            return new ResponseEntity<>(fileInfo, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Could not Upload.", HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_PATIENT')")
+    @RequestMapping(value = "/{documentId}/removeClinic/{clinicId}", method = RequestMethod.POST)
+    public ResponseEntity removeClinicFromDocument(@PathVariable UUID documentId, @PathVariable UUID clinicId)
+    {
+        try {
+            com.ectosense.nightowl.data.entity.FileInfo fileInfo =
+                    medicalRecordService.removeClinicFromDocument(documentId, clinicId);
+            return new ResponseEntity<>(fileInfo, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Could not Upload.", HttpStatus.EXPECTATION_FAILED);
+        }
+    }
+
+    @RequestMapping(value = "{patientId}", method = RequestMethod.GET)
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
+            "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
+    public ResponseEntity getDocumentsByPatient(@PathVariable UUID patientId)
+    {
+        List<com.ectosense.nightowl.data.entity.FileInfo> files = medicalRecordService.getDocumentsByPatient(patientId);
+        return new ResponseEntity<>(files, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "{clinicId}/patient/{patientId}", method = RequestMethod.GET)
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
+            "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
+    public ResponseEntity getDocumentsByPatientAndClinic(@PathVariable UUID clinicId, @PathVariable UUID patientId)
+    {
+        List<com.ectosense.nightowl.data.entity.FileInfo> files =
+                medicalRecordService.getDocumentsByClinicAndPatient(clinicId, patientId);
+        return new ResponseEntity<>(files, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "{patientId}/files/{filename:.+}", method = RequestMethod.GET)
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') " +
+            "or hasRole('ROLE_DOCTOR') or hasRole('ROLE_CLINIC') or hasRole('ROLE_PATIENT')")
+    public ResponseEntity getDocument(@PathVariable UUID patientId, @PathVariable String filename)
+    {
+        Resource file = medicalRecordService.getDocument(patientId, filename);
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
+    }
+
+    /*
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file)
     {
@@ -69,5 +144,5 @@ public class MedicalRecordController
         Resource file = fileStorageService.load(filename);
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }
+    }*/
 }

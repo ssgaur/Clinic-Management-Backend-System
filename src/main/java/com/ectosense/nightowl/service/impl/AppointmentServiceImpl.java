@@ -49,8 +49,6 @@ public class AppointmentServiceImpl
     @Autowired
     private FileInfoServiceImpl fileInfoService;
 
-    private final Path root = Paths.get("uploads");
-
     public Appointment createAppointment(UUID clinicId, UUID doctorId, UUID patientId, User user,
                                          Appointment appointment)
     {
@@ -98,78 +96,5 @@ public class AppointmentServiceImpl
     public Appointment getAppointmentById(UUID appointmentId)
     {
         return appointmentRepository.getOne(appointmentId);
-    }
-
-    Path createDirectoryIfNotExists(String folder)
-    {
-        try
-        {
-            Path root  = Paths.get("uploads"+folder);
-            Files.createDirectories(root);
-            return root;
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not initialize folder for upload!");
-        }
-    }
-
-    public FileInfo saveDocumemt(UUID appointmentId, MultipartFile file)
-    {
-        Appointment appointment = appointmentRepository.getOne(appointmentId);
-        if (appointment == null)
-        {
-            throw new ResourceNotFoundException("No Appointment found to Upload document.");
-        }
-        Path uploadDir = createDirectoryIfNotExists("/"+appointmentId.toString());
-        try
-        {
-            Files.copy(file.getInputStream(), uploadDir.resolve(file.getOriginalFilename()));
-            String url = MvcUriComponentsBuilder.fromMethodName(
-                    AppointmentController.class, "getDocument",
-                    appointmentId,
-                    file.getOriginalFilename())
-                    .build().toString();
-            FileInfo fileInfo = new FileInfo();
-            fileInfo.setAppointment(appointment);
-            fileInfo.setFileName(file.getOriginalFilename());
-            fileInfo.setFileUrl(url);
-            return fileInfoService.saveFile(fileInfo);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
-        }
-    }
-
-    public List<FileInfo> getDocumentsByAppointment(UUID appointmentId)
-    {
-        Appointment appointment = appointmentRepository.getOne(appointmentId);
-        if (appointment == null)
-        {
-            throw new ResourceNotFoundException("No Appointment found to Upload document.");
-        }
-        return fileInfoService.getFilesByAppointment(appointment);
-    }
-
-    public Resource getDocument(UUID appointmentId, String filename) {
-        try
-        {
-            Path root  = Paths.get("uploads/"+appointmentId);
-            Path file = root.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-
-            if (resource.exists() || resource.isReadable())
-            {
-                return resource;
-            } else
-            {
-                throw new RuntimeException("Could not read the file!");
-            }
-        }
-        catch (MalformedURLException e)
-        {
-            throw new RuntimeException("Error: " + e.getMessage());
-        }
     }
 }
