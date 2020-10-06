@@ -103,42 +103,4 @@ public class MedicalRecordController extends ApiController
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }
-
-    /*
-    @RequestMapping(value = "/upload", method = RequestMethod.POST)
-    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file)
-    {
-        fileStorageService.init();
-        try {
-            FileInfo fileInfo =  fileStorageService.save(file);
-            return new ResponseEntity<>(fileInfo, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Could not Upload.", HttpStatus.EXPECTATION_FAILED);
-        }
-    }
-
-    @RequestMapping(value = "/files", method = RequestMethod.GET)
-    public ResponseEntity getListFiles()
-    {
-        List<FileInfo> fileInfos = fileStorageService.loadAll()
-                .map(path -> {
-                                String filename = path.getFileName().toString();
-                                String url = MvcUriComponentsBuilder.fromMethodName(
-                                        MedicalRecordController.class, "getFile",
-                                        path.getFileName().toString())
-                                        .build().toString();
-                    return new FileInfo(filename, url);
-                })
-                .collect(Collectors.toList());
-
-        return ResponseEntity.status(HttpStatus.OK).body(fileInfos);
-    }
-
-    @RequestMapping(value = "/files/{filename:.+}", method = RequestMethod.GET)
-    public ResponseEntity getFile(@PathVariable String filename)
-    {
-        Resource file = fileStorageService.load(filename);
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }*/
 }
