@@ -43,11 +43,11 @@ public class DatasourceConfig
     @Profile("!local")
     public DataSource dataSource()
     {
-        String hostName = "prod_host_name";
+        String hostName = "ec2-54-155-22-153.eu-west-1.compute.amazonaws.com";
         String port = "5432";
-        String dbName = "database_name";
-        String userName = "database_username";
-        String password = "database_password";
+        String dbName = "dvn8dgrni62lq";
+        String userName = "qglaeelsahazbs";
+        String password = "6ecc788dc5b6532807d6e7eb67a31a7df9db1e731b8dce347b446a21609b85cd";
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
         dataSource.setDriverClassName("org.postgresql.Driver");
